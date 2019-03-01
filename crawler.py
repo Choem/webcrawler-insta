@@ -5,8 +5,10 @@ import io
 from urllib.parse import urlparse, urlencode, quote_plus
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from copy import deepcopy
 
 class InstagramCrawler():
+    location = None
     data = list()
 
     def __init__(self, email, password):
@@ -40,6 +42,11 @@ class InstagramCrawler():
                 self.crawl(url, cb)
                 return
 
+            if not self.location:
+                self.location = deepcopy(bodyWebElementJson['data']['location'])
+                self.location.pop('edge_location_to_media')
+                self.location.pop('edge_location_to_top_posts')
+
             total = bodyWebElementJson['data']['location']['edge_location_to_media']['count']
             edges = bodyWebElementJson['data']['location']['edge_location_to_media']['edges']
             self.data += [edge['node'] for edge in edges]
@@ -52,6 +59,7 @@ class InstagramCrawler():
                 self.crawl(self._createUrl(amount_to_get, end_cursor), cb)
             else:
                 print('Done crawling')
+                self.project_id = bodyWebElementJson['data']['location']['id']
                 cb()
 
 
@@ -66,3 +74,11 @@ class InstagramCrawler():
     @property
     def get_data(self):
         return self.data
+
+    @property
+    def get_location(self):
+        return self.location
+
+    @property
+    def get_project_id(self):
+        return self.project_id

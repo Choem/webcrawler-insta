@@ -2,38 +2,36 @@ import io
 import json
 import os
 
-from urllib.request import urlopen 
+from urllib.request import urlopen
+from utils import chunk
 
 class ImageDownloader:
-    def __init__(self):
-        with open('data.json', 'r') as file:
+    def __init__(self, project_id):
+        self.project_id = project_id
+
+        with open('data/%s/data.json' % (project_id), 'r') as file:
             self.data = json.load(file)
 
 
     def download(self):
-        if not os.path.isdir('images'):
-            os.mkdir('images')
+        if not os.path.isdir('data/%s/images' % (self.project_id)):
+            os.mkdir('data/%s/images' % (self.project_id))
 
-        collections = self._chunk(self.data, 50)
+        posts = chunk(self.data, 50)
         
-        for index, collection in enumerate(collections):
-            print('Downloading %d images' % (len(collection)))
-            self._write_images(collection)
-            print('Progress %f' % (100/len(collections)*index + 1))
+        for index, post in enumerate(posts):
+            print('Downloading %d images' % (len(post)))
+            self._write_images(post)
+            print('Progress %f' % (100/len(posts)*index + 1))
 
 
-    def _chunk(self, data, size):
-        array = list()
-        for i in range(0, len(data), size):
-            array.append(data[i:i+size])
-        return array
-
-
-    def _write_images(self, images):
-        for image in images:
-            file = open('images/%s.jpg' % (image['id']), 'wb')
+    def _write_images(self, posts):
+        for post in posts:
             try:
-                file.write(urlopen(image['display_url']).read())
-                file.close()
+                response = urlopen(post['display_url'])
+                if response.getcode() == 200:
+                    file = open('data/%s/images/%s.jpg' % (self.project_id, post['id']), 'wb')
+                    file.write(response.read())
+                    file.close()
             except:
                 pass

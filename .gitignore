@@ -1,6 +1,7 @@
+# Folders
 .vscode
 __pycache__
-images
+data
 
-data.json
+# Files
 ds41c-232407-bb6ea0813a31.json
